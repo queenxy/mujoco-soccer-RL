@@ -1,0 +1,52 @@
+<mujoco model="robo_soccer">
+	<compiler angle="radian" coordinate="local" inertiafromgeom="true"/>
+	<option integrator="RK4" timestep="0.01"/>
+	<default>
+		<joint armature="1" damping="1" limited="true"/>
+		<geom conaffinity="1" contype="1" friction="0.1 0.1 0.1"/>
+	</default>
+
+    <asset>
+    <texture builtin="gradient" height="100" rgb1="1 1 1" rgb2="0 0 0" type="skybox" width="100"/>
+    <texture builtin="flat" height="1278" mark="cross" markrgb="1 1 1" name="texgeom" random="0.01" rgb1="0.8 0.6 0.4" rgb2="0.8 0.6 0.4" type="cube" width="127"/>
+    <texture builtin="checker" height="100" name="texplane" rgb1="0 0 0" rgb2="0.8 0.8 0.8" type="2d" width="100"/>
+    <material name="MatPlane" reflectance="0.5" shininess="1" specular="1" texrepeat="60 60" texture="texplane"/>
+    <material name="geom" texture="texgeom" texuniform="true"/>
+  </asset>
+
+	<worldbody>
+		<!-- Arena -->
+		<geom conaffinity="0" contype="0" name="ground" pos="0 0 0" size="1 1 10" type="plane" rgba="0 1 0 0.8"/>
+		<body name="arena">
+			<geom conaffinity="0" contype="0" fromto="-0.78 -0.68 0.01 0.78 -0.68 0.02135" name="sideS" size=".03" type="capsule" mass="100" rgba="1 1 1 1"/>
+			<geom conaffinity="0" contype="0" fromto="-0.78 0.68 0.01 0.78 0.68 0.02135" name="sideN" size=".03" type="capsule" mass="100" rgba="1 1 1 1"/>
+			<geom conaffinity="0" contype="0" fromto="0.88 -0.2 0.01 0.88 0.2 0.02135" name="sideG1" size=".03" type="capsule" mass="100" rgba="1 1 1 1"/>
+			<geom conaffinity="0" contype="0" fromto="-0.88 -0.2 0.01 -0.88 0.2 0.02135" name="sideG2" size=".03" type="capsule" mass="100" rgba="1 1 1 1"/>
+			<geom conaffinity="1" contype="0" fromto="-0.78 -0.68 0.01 -0.78 -0.2 0.02135" name="sideE1" size=".03" type="capsule" mass="100" rgba="1 1 1 1"/>
+			<geom conaffinity="1" contype="0" fromto="-0.78 0.68 0.01 -0.78 0.2 0.02135" name="sideE2" size=".03" type="capsule" mass="100" rgba="1 1 1 1"/>			
+			<geom conaffinity="1" contype="0" fromto="0.78 -0.68 0.01 0.78 -0.2 0.02135" name="sideW1" size=".03" type="capsule" mass="100" rgba="1 1 1 1"/>
+			<geom conaffinity="1" contype="0" fromto="0.78 0.68 0.01 0.78 0.2 0.02135" name="sideW2" size=".03" type="capsule" mass="100" rgba="1 1 1 1"/>			
+			<geom conaffinity="0" contype="0" fromto="-0.78 -0.2 0.01 -0.88 -0.2 0.02135" name="side1" size=".03" type="capsule" mass="100" rgba="1 1 1 1"/>
+			<geom conaffinity="0" contype="0" fromto="-0.78 0.2 0.01 -0.88 0.2 0.02135" name="side2" size=".03" type="capsule" mass="100" rgba="1 1 1 1"/>
+			<geom conaffinity="0" contype="0" fromto="0.78 -0.2 0.01 0.88 -0.2 0.02135" name="side3" size=".03" type="capsule" mass="100" rgba="1 1 1 1"/>
+			<geom conaffinity="0" contype="0" fromto="0.78 0.2 0.01 0.88 0.2 0.02135" name="side4" size=".03" type="capsule" mass="100" rgba="1 1 1 1"/>
+		</body>
+        
+		<!-- Ball -->
+		<body name="ball" pos="0 0 0.02135">
+			<geom contype="1" conaffinity="0" name="ball" pos="0 0 0" size="0.02135" type="sphere" mass="0.046" rgba="1 0 0 1"/>
+			<joint name="ball_slidex" type="slide" pos="0 0 0" axis="1 0 0" range="-0.84 0.84" damping="0.1"/>
+      		<joint name="ball_slidey" type="slide" pos="0 0 0" axis="0 1 0" range="-0.64 0.64" damping="0.1"/>
+		</body>
+		<!-- Agent -->
+    	<body name="B1" pos="-0.5 0 0.03">
+	  		<geom conaffinity="1" contype="0" name="agent_b1" fromto="0 0 -0.04 0 0 0.05" size="0.04" type="capsule" mass="1" rgba='0 0 1 1'/>
+			<joint name="b1_slidex" type="slide" pos="0 0 0" axis="1 0 0" range="-0.21 1.21" damping="0.1"/>
+      		<joint name="b1_slidey" type="slide" pos="0 0 0" axis="0 1 0" range="-0.61 0.61" damping="0.1"/>
+		</body>
+	</worldbody>
+	<actuator>
+		<motor ctrllimited="true" ctrlrange="-1 1" gear="1" joint="b1_slidex" name="b1_slidex"/>
+    	<motor ctrllimited="true" ctrlrange="-1 1" gear="1" joint="b1_slidey" name="b1_slidey"/>
+	</actuator>
+</mujoco>
