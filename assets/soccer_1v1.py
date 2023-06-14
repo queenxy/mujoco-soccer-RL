@@ -4,6 +4,9 @@ from gym import utils
 from gym.envs.mujoco import MujocoEnv
 from gym.spaces import Box
 
+from stable_baselines3.common.on_policy_algorithm import ActorCriticPolicy
+from stable_baselines3.common.utils import get_schedule_fn
+
 DEFAULT_CAMERA_CONFIG = {
     "distance": 4.0,
 }
@@ -19,17 +22,26 @@ class SoccerEnv(MujocoEnv, utils.EzPickle):
         "render_fps": 20,
     }
     
+    body_id = {
+        "ball": 2,
+        "B1": 3,
+        "Y1": 4,
+    }
+    
     def __init__(
         self,
-        xml_file="soccer_shooting.xml",
-        reset_noise_scale = 0.2,
+        xml_file="soccer_1v1.xml",
+        reset_noise_scale = 0.1,
         kp = 10,
+        policy_ = None,
         **kwargs
     ):
         utils.EzPickle.__init__(
             self,
             xml_file,
             reset_noise_scale,
+            kp = 10,
+            policy_ = None,
             **kwargs       
         )
 
@@ -45,10 +57,11 @@ class SoccerEnv(MujocoEnv, utils.EzPickle):
 
 
     def step(self, action):
+        # act_Y = - self.policy_.predict(obs)[0]
+        # joint_action = np.concatenate([action,act_Y])
         self.do_simulation(action, self.frame_skip)
         ball_pos = self.get_body_com("ball")[:2].copy()
         agentB_pos= self.get_body_com("B1")[:2].copy()
-        agentY_pos= self.get_body_com("Y1")[:2].copy()
 
         if ball_pos[0] > 0.76:
             score1 = 1
@@ -70,15 +83,17 @@ class SoccerEnv(MujocoEnv, utils.EzPickle):
         ang_rewY = 0.01 * np.dot(dis,kickY)/(np.linalg.norm(dis)+1e-5)/(np.linalg.norm(kickY)+1e-5)
         ang_rewB = -0.01 * np.dot(dis,kickB)/(np.linalg.norm(dis)+1e-5)/(np.linalg.norm(kickB)+1e-5)
 
-        reward = dis_rew + kick_rew + ang_rewY + ang_rewB + 100 * score1 + 100 * score2
+        reward = dis_rew + kick_rew + ang_rewY + ang_rewB + 100 * score1 - 100 * score2
 
         done = score1 or score2
 
         observation = self._get_obs()
+        obs_Y = self.get_obsY()
         info = {
             "reward": reward,
+            "obs_Y": obs_Y,
         }
-
+        
         return observation, reward, done, False, info
 
     def _get_obs(self):
@@ -93,6 +108,20 @@ class SoccerEnv(MujocoEnv, utils.EzPickle):
         # print(observations)
         
         return observations
+    
+    def get_obsY(self):
+        ball_pos = self.get_body_com("ball")[:2].copy()
+        ball_vel = self.get_body_vel("ball")[3:5].copy()
+        agentB_pos= self.get_body_com("B1")[:2].copy()
+        agentB_vel= self.get_body_vel("B1")[3:5].copy()
+        agentY_pos= self.get_body_com("Y1")[:2].copy()
+        agentY_vel= self.get_body_vel("Y1")[3:5].copy()
+
+        observations = -np.concatenate((ball_pos,ball_vel,agentY_pos ,agentY_vel, agentB_pos, agentB_vel))
+        # print(observations)
+        
+        return observations
+    
 
     def reset_model(self):
         noise_low = -self._reset_noise_scale
@@ -114,3 +143,13 @@ class SoccerEnv(MujocoEnv, utils.EzPickle):
                 getattr(self.viewer.cam, key)[:] = value
             else:
                 setattr(self.viewer.cam, key, value)
+
+    # def _set_action_space(self):
+    #     self.action_space = Box(
+    #         low=-1, high=1, shape=(2,), dtype=np.float64
+    #     )
+    #     return self.action_space
+    
+    def get_body_vel(self, body_name):
+        return self.data.cvel[self.body_id[body_name]]
+    
