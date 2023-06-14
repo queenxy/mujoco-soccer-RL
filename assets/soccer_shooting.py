@@ -19,6 +19,11 @@ class SoccerEnv(MujocoEnv, utils.EzPickle):
         "render_fps": 20,
     }
     
+    body_id = {
+        "ball": 2,
+        "B1": 3,
+    }
+    
     def __init__(
         self,
         xml_file="soccer_shooting.xml",
@@ -108,3 +113,7 @@ class SoccerEnv(MujocoEnv, utils.EzPickle):
                 getattr(self.viewer.cam, key)[:] = value
             else:
                 setattr(self.viewer.cam, key, value)
+                
+    def get_body_vel(self, body_name):
+        return self.data.cvel[self.body_id[body_name]]
+    

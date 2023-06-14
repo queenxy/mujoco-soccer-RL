@@ -9,6 +9,7 @@ DEFAULT_CAMERA_CONFIG = {
 }
 
 
+
 class SoccerEnv(MujocoEnv, utils.EzPickle):
     metadata = {
         "render_modes": [
@@ -17,6 +18,14 @@ class SoccerEnv(MujocoEnv, utils.EzPickle):
             "depth_array",
         ],
         "render_fps": 20,
+    }
+    
+    body_id = {
+        "ball": 2,
+        "B1": 3,
+        "B2": 4,
+        "Y1": 5,
+        "Y2": 6,
     }
     
     def __init__(
@@ -152,9 +161,6 @@ class SoccerEnv(MujocoEnv, utils.EzPickle):
             else:
                 setattr(self.viewer.cam, key, value)
 
-    def _set_action_space(self):
-        self.action_space = Box(
-            low=-1, high=1, shape=(2,), dtype=np.float64
-        )
-        return self.action_space
+    def get_body_vel(self, body_name):
+        return self.data.cvel[self.body_id[body_name]]
     
